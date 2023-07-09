@@ -56,5 +56,5 @@ jobs:
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.KERNEL_VERSION }}_${{ env.KERNEL_TARGET }}
+          name: K40 KernelSU
           path: kernel-source/out/arch/arm64/boot/Image
