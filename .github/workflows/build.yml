@@ -43,7 +43,7 @@ jobs:
           git clone --depth=1 https://github.com/zfdx123/kernel_xiaomi_alioth kernel-source
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source 
-          ./KernelSU/kernel/setup.sh
+          ./KernelSU/kernel/setup.sh main
 
       - name: Make
         run: |
