@@ -57,14 +57,12 @@ jobs:
         run: |
           chmod +x ./magiskboot
           unzip boot.zip
-          mv kernel-source/out/arch/arm64/boot/Image ./Image
-          ls
+          cp -rf kernel-source/out/arch/arm64/boot/Image ./Image
           ./magiskboot unpack boot.img
           rm -rf kernel
           mv Image kernel
           ./magiskboot repack boot.img
           rm -rf kernel ramdisk.cpio boot.img
-          
 
       - name: Kernel REL
         uses: actions/upload-artifact@v3
