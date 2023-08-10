@@ -62,10 +62,15 @@ jobs:
           rm -rf kernel
           mv Image kernel
           ./magiskboot repack boot.img
-          rm -rf kernel ramdisk.cpio boot.img
+          rm -rf ramdisk.cpio boot.img
+          mv kernel Image
+
+      - name: Zip
+        run: |
+          zip -r -9 -q -o K40-Kernel.zip new-boot.img Image
 
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
           name: K40 KernelSU
-          path: ./new-boot.img
+          path: ./K40-Kernel.zip
