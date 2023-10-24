@@ -4,22 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       kernel_tag:
-        description: '内核代码分支'
+        description: '内核代码分支/Tag'
         required: false
-        default: ''
         type: string
+        default: ''
       config_name:
         description: '内核编译配置文件名'
         required: false
         type: string
+        default: 'alioth_hylab_defconfig'
       git_url:
         description: '内核仓库地址'
-        type: string
         required: false
+        type: string
+        default: 'https://github.com/zfdx123/kernel_xiaomi_alioth.git'
       clang_url:
         description: '编译器下载地址'
-        type: string
         required: false
+        type: string
+        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
 
 jobs:
 
@@ -28,22 +31,8 @@ jobs:
     name: Build K40 Kernel
 
     runs-on: ubuntu-22.04
-    env:
-      kernel_tag: ${{ inputs.kernel_tag !='' && inputs.kernel_tag || vars.kernel_tag}}
-      config_name: ${{ inputs.config_name !=''  && inputs.config_name || vars.config_name }}
-      git_url: ${{ inputs.git_url !=''  && inputs.git_url || vars.git_url }}
-      clang_url: ${{ inputs.clang_url !=''  && inputs.clang_url || vars.clang_url }}
-      default_config_name: 'alioth_hylab_defconfig'
-      default_git_url: 'https://github.com/zfdx123/kernel_xiaomi_alioth.git'
-      default_clang_url: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
 
     steps:
-      - name: Echo Env Variables
-        run: |
-          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 kernel_tag ，使用主分支";else echo "内核分支：${{env.kernel_tag}}";fi
-          if [[ "${config_name}" == "" ]];then echo "未设置变量 config_name ，使用默认值${{env.default_config_name}}";else echo "内核编译配置文件名：${{env.config_name}}";fi
-          if [[ "${git_url}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";else echo "内核仓库地址：${{env.git_url}}";fi
-          if [[ "${clang_url}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";else echo "编译器下载地址：${{env.clang_url}}";fi
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -67,12 +56,12 @@ jobs:
       - name: Install Clang
         run: |
           mkdir clang
-          wget ${{env.clang_url!='' && env.clang_url || env.default_clang_url}}
+          wget ${{ inputs.clang_url }}
           tar -C clang/ -zxvf *.tar.gz
       
       - name: Clone Kernel
         run: |
-          git clone --depth=1 ${{ env.kernel_tag !='' && format('-b {0}', env.kernel_tag) || ''}} ${{ env.git_url!='' && env.git_url || env.default_git_url}} kernel-source
+          git clone --depth=1 ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source 
           ./KernelSU/kernel/setup.sh main
@@ -82,7 +71,7 @@ jobs:
           export ClangHome=$(pwd)/clang
           export PATH=${ClangHome}/bin:${PATH}
           cd kernel-source
-          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ env.config_name!='' && env.config_name ||env.default_config_name}}
+          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ inputs.config_name }}
           make -j$(nproc) LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- KBUILD_BUILD_USER=hylab KBUILD_BUILD_HOST=localhost
 
       - name: Patch Boot
@@ -105,5 +94,5 @@ jobs:
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.config_name!='' && env.config_name || env.default_config_name}} KernelSU
+          name: ${{ inputs.config_name }} KernelSU
           path: ./Kernel.zip
