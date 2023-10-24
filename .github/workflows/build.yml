@@ -4,16 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       kernel_tag:
-        description: '代码分支'
+        description: '内核代码分支'
         required: false
         default: ''
         type: string
       config_name:
-        description: '编译配置文件名'
+        description: '内核编译配置文件名'
         required: false
         type: string
       git_url:
-        description: '仓库地址'
+        description: '内核仓库地址'
         type: string
         required: false
       clang_url:
@@ -33,14 +33,21 @@ jobs:
       config_name: ${{ inputs.config_name !=''  && inputs.config_name || vars.config_name }}
       git_url: ${{ inputs.git_url !=''  && inputs.git_url || vars.git_url }}
       clang_url: ${{ inputs.clang_url !=''  && inputs.clang_url || vars.clang_url }}
+      default_config_name: 'alioth_hylab_defconfig'
+      default_git_url: 'https://github.com/zfdx123/kernel_xiaomi_alioth.git'
+      default_clang_url: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
 
     steps:
-      - name: Echo Custom variables
+      - name: Echo Env Variables
         run: |
           echo ${{env.kernel_tag}}
+          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 kernel_tag ，使用主分支";fi
           echo ${{env.config_name}}
+          if [[ "${config_name}" == "" ]];then echo "未设置变量 config_name ，使用默认值${{env.default_config_name}}";fi
           echo ${{env.git_url}}
+          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";fi
           echo ${{env.clang_url}}
+          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";fi
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -64,12 +71,12 @@ jobs:
       - name: Install Clang
         run: |
           mkdir clang
-          wget ${{env.clang_url!='' && env.clang_url || 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'}}
+          wget ${{env.clang_url!='' && env.clang_url || env.default_clang_url}}
           tar -C clang/ -zxvf *.tar.gz
       
       - name: Clone Kernel
         run: |
-          git clone --depth=1 ${{ env.kernel_tag !='' && format('-b {0}', env.kernel_tag) || ''}} ${{ env.git_url!='' && env.git_url || 'https://github.com/zfdx123/kernel_xiaomi_alioth.git'}} kernel-source
+          git clone --depth=1 ${{ env.kernel_tag !='' && format('-b {0}', env.kernel_tag) || ''}} ${{ env.git_url!='' && env.git_url || env.default_git_url}} kernel-source
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source 
           ./KernelSU/kernel/setup.sh main
@@ -79,7 +86,7 @@ jobs:
           export ClangHome=$(pwd)/clang
           export PATH=${ClangHome}/bin:${PATH}
           cd kernel-source
-          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ env.config_name!='' && env.config_name ||'alioth_hylab_defconfig'}}
+          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ env.config_name!='' && env.config_name ||env.default_config_name}}
           make -j$(nproc) LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- KBUILD_BUILD_USER=hylab KBUILD_BUILD_HOST=localhost
 
       - name: Patch Boot
