@@ -40,14 +40,10 @@ jobs:
     steps:
       - name: Echo Env Variables
         run: |
-          echo ${{env.kernel_tag}}
-          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 kernel_tag ，使用主分支";fi
-          echo ${{env.config_name}}
-          if [[ "${config_name}" == "" ]];then echo "未设置变量 config_name ，使用默认值${{env.default_config_name}}";fi
-          echo ${{env.git_url}}
-          if [[ "${git_url}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";fi
-          echo ${{env.clang_url}}
-          if [[ "${clang_url}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";fi
+          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 kernel_tag ，使用主分支";else echo "内核分支：${{env.kernel_tag}}";fi
+          if [[ "${config_name}" == "" ]];then echo "未设置变量 config_name ，使用默认值${{env.default_config_name}}";else echo "内核编译配置文件名：${{env.config_name}}";fi
+          if [[ "${git_url}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";else echo "内核仓库地址：${{env.git_url}}";fi
+          if [[ "${clang_url}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";else echo "编译器下载地址：${{env.clang_url}}";fi
 
       - name: Checkout
         uses: actions/checkout@v3
