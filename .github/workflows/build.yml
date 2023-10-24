@@ -105,5 +105,5 @@ jobs:
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.config_name!='' && env.config_name ||'alioth_hylab_defconfig'}} KernelSU
+          name: ${{ env.config_name!='' && env.config_name || env.default_config_name}} KernelSU
           path: ./Kernel.zip
