@@ -45,9 +45,9 @@ jobs:
           echo ${{env.config_name}}
           if [[ "${config_name}" == "" ]];then echo "未设置变量 config_name ，使用默认值${{env.default_config_name}}";fi
           echo ${{env.git_url}}
-          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";fi
+          if [[ "${git_url}" == "" ]];then echo "未设置变量 git_url ，使用默认值${{env.default_git_url}}";fi
           echo ${{env.clang_url}}
-          if [[ "${kernel_tag}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";fi
+          if [[ "${clang_url}" == "" ]];then echo "未设置变量 clang_url ，使用默认值${{env.default_clang_url}}";fi
 
       - name: Checkout
         uses: actions/checkout@v3
