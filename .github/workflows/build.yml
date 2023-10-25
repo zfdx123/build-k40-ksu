@@ -2,11 +2,7 @@ name: Build K40 Kernel
 
 on:
   workflow_dispatch:
-env:
-  kernel_tag: ${{ vars.kernel_tag !='' && format('-b {0}', vars.kernel_tag) || '' }}
-  config_name: ${{ vars.config_name =='' && 'alioth_hylab_defconfig' || vars.config_name }}
-  git_url: ${{ vars.git_url =='' && 'https://github.com/zfdx123/kernel_xiaomi_alioth.git' || vars.git_url }}
-  
+
 jobs:
 
   build_kernel:
@@ -16,11 +12,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Echo Custom variables
-        run: |
-          echo ${{env.kernel_tag}}
-          echo ${{env.config_name}}
-          echo ${{env.git_url}}
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -44,22 +35,22 @@ jobs:
       - name: Install Clang
         run: |
           mkdir clang
-          wget https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz
+          wget https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.0-release/WeebX-Clang-17.0.0.tar.gz 
           tar -C clang/ -zxvf *.tar.gz
       
       - name: Clone Kernel
         run: |
-          git clone --depth=1 ${{ env.kernel_tag }} ${{ env.git_url}} kernel-source
+          git clone --depth=1 https://github.com/zfdx123/kernel_xiaomi_alioth kernel-source
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source 
-          ./KernelSU/kernel/setup.sh main
+          ./KernelSU/kernel/setup.sh
 
       - name: Make
         run: |
           export ClangHome=$(pwd)/clang
           export PATH=${ClangHome}/bin:${PATH}
           cd kernel-source
-          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{env.config_name}}
+          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld alioth_hylab_defconfig
           make -j$(nproc) LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- KBUILD_BUILD_USER=hylab KBUILD_BUILD_HOST=localhost
 
       - name: Patch Boot
@@ -77,10 +68,10 @@ jobs:
 
       - name: Zip
         run: |
-          zip -r -9 -q -o Kernel.zip new-boot.img Image
+          zip -r -9 -q -o K40-Kernel.zip new-boot.img Image dtbo.img
 
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.config_name}} KernelSU
-          path: ./Kernel.zip
+          name: K40 KernelSU
+          path: ./K40-Kernel.zip
