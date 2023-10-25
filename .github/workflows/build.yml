@@ -7,7 +7,7 @@ on:
         description: '内核代码分支/Tag'
         required: false
         type: string
-        default: ''
+        default: 'master'
       config_name:
         description: '内核编译配置文件名'
         required: false
