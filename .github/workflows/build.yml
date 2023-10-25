@@ -2,6 +2,27 @@ name: Build K40 Kernel
 
 on:
   workflow_dispatch:
+    inputs:
+      kernel_tag:
+        description: '内核代码分支/Tag'
+        required: false
+        type: string
+        default: ''
+      config_name:
+        description: '内核编译配置文件名'
+        required: false
+        type: string
+        default: 'alioth_hylab_defconfig'
+      git_url:
+        description: '内核仓库地址'
+        required: false
+        type: string
+        default: 'https://github.com/zfdx123/kernel_xiaomi_alioth.git'
+      clang_url:
+        description: '编译器下载地址'
+        required: false
+        type: string
+        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
 
 jobs:
 
@@ -31,26 +52,26 @@ jobs:
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
           sudo timedatectl set-timezone Asia/Shanghai
-   
+
       - name: Install Clang
         run: |
           mkdir clang
-          wget https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.0-release/WeebX-Clang-17.0.0.tar.gz 
+          wget ${{ inputs.clang_url }}
           tar -C clang/ -zxvf *.tar.gz
       
       - name: Clone Kernel
         run: |
-          git clone --depth=1 https://github.com/zfdx123/kernel_xiaomi_alioth kernel-source
+          git clone --depth=1 ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source 
-          ./KernelSU/kernel/setup.sh
+          ./KernelSU/kernel/setup.sh main
 
       - name: Make
         run: |
           export ClangHome=$(pwd)/clang
           export PATH=${ClangHome}/bin:${PATH}
           cd kernel-source
-          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld alioth_hylab_defconfig
+          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ inputs.config_name }}
           make -j$(nproc) LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- KBUILD_BUILD_USER=hylab KBUILD_BUILD_HOST=localhost
 
       - name: Patch Boot
@@ -68,10 +89,10 @@ jobs:
 
       - name: Zip
         run: |
-          zip -r -9 -q -o K40-Kernel.zip new-boot.img Image dtbo.img
+          zip -r -9 -q -o Kernel.zip new-boot.img Image
 
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: K40 KernelSU
-          path: ./K40-Kernel.zip
+          name: ${{ inputs.config_name }} KernelSU
+          path: ./Kernel.zip
