@@ -1,0 +1,98 @@
+name: Build K40 Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_tag:
+        description: '内核代码分支/Tag'
+        required: false
+        type: string
+        default: 'test'
+      config_name:
+        description: '内核编译配置文件名'
+        required: false
+        type: string
+        default: 'alioth_hylab_defconfig'
+      git_url:
+        description: '内核仓库地址'
+        required: false
+        type: string
+        default: 'https://github.com/arosoniut/kernel_xiaomi_alioth.git'
+      clang_url:
+        description: '编译器下载地址'
+        required: false
+        type: string
+        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
+
+jobs:
+
+  build_kernel:
+
+    name: Build K40 Kernel
+
+    runs-on: ubuntu-22.04
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Initialization environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -qq update
+          # sudo -E apt-get -qq install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1-s1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync
+          sudo -E apt-get -qq install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32readline-dev lib32z1-dev liblz4-tool libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev libc6-dev-i386 libncurses6 libncursesw6 lib32ncurses-dev lib32ncurses6 lib32ncursesw6 libncurses5-dev x11proto-core-dev libx11-dev libgl1-mesa-dev unzip fontconfig make python2
+          sudo -E apt-get -qq install libfuse-dev
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: Install Clang
+        run: |
+          mkdir clang
+          wget ${{ inputs.clang_url }}
+          tar -C clang/ -zxvf *.tar.gz
+      
+      - name: Clone Kernel
+        run: |
+          git clone --depth=1 -b ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
+          git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
+          cd kernel-source 
+          ./KernelSU/kernel/setup.sh main
+
+      - name: Make
+        run: |
+          export ClangHome=$(pwd)/clang
+          export PATH=${ClangHome}/bin:${PATH}
+          cd kernel-source
+          make LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld ${{ inputs.config_name }}
+          make -j$(nproc) LLVM=1 LLVM_IAS=1 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LD=ld.lld CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- KBUILD_BUILD_USER=hylab KBUILD_BUILD_HOST=localhost
+
+      - name: Patch Boot
+        run: |
+          chmod +x ./magiskboot
+          unzip boot.zip
+          cp -rf kernel-source/out/arch/arm64/boot/Image ./Image
+          cp -rf kernel-source/out/arch/arm64/boot/dtbo.img ./dtbo.img
+          ./magiskboot unpack boot.img
+          rm -rf kernel
+          mv Image kernel
+          ./magiskboot repack boot.img
+          rm -rf ramdisk.cpio boot.img
+          mv kernel Image
+
+      - name: Zip
+        run: |
+          zip -r -9 -q -o Kernel.zip new-boot.img Image
+
+      - name: Kernel REL
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.config_name }} KernelSU
+          path: ./Kernel.zip
