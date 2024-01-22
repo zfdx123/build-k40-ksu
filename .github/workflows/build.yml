@@ -54,8 +54,10 @@ jobs:
           sudo timedatectl set-timezone Asia/Shanghai
 
       - name: Init Config
+        id: init_config
         run: |
           processed_name=$(echo ${{ inputs.config_name }} | awk -F'/' '{ if (NF > 1) print $2; else print $0 }')
+          echo "processed_name=$(echo $processed_name)" >> $GITHUB_OUTPUT
 
       - name: Install Clang
         run: |
@@ -98,5 +100,5 @@ jobs:
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.processed_name }} KernelSU
+          name: ${{ steps.init_config.outputs.processed_name }} KernelSU
           path: ./Kernel.zip
