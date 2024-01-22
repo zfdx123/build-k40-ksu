@@ -3,6 +3,15 @@ name: Build K40 Kernel
 on:
   workflow_dispatch:
     inputs:
+      ksu:
+        description: '添加KSU支持'
+        required: false
+        default: 'true'
+      config_path:
+        description: '内核配置文件路径（如果不需要KSU则忽略）/一般默认即可'
+        required: false
+        type: string
+        default: 'arch/arm64/configs/'
       kernel_tag:
         description: '内核代码分支/Tag'
         required: false
@@ -68,8 +77,17 @@ jobs:
       - name: Clone Kernel
         run: |
           git clone --depth=1 -b ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
+          
+      - name: Support KernelSU
+        if: github.event.inputs.ksu == 'true'
+        run: |
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
-          cd kernel-source 
+          cd kernel-source
+          echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+          echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+          echo "CONFIG_KPROBE_EVENTS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+          git add ${{ inputs.config_path }}${{ inputs.config_name }}
+          git commit -m "KUS"
           ./KernelSU/kernel/setup.sh main
 
       - name: Make
