@@ -22,7 +22,7 @@ on:
         description: '编译器下载地址'
         required: false
         type: string
-        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-17.0.4-release/WeebX-Clang-17.0.4.tar.gz'
+        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-18.0.0git-release/WeebX-Clang-18.0.0git.tar.gz'
 
 jobs:
 
@@ -52,6 +52,10 @@ jobs:
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
           sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: Init Config
+        run: |
+          processed_name=$(echo ${{ inputs.config_name }} | awk -F'/' '{ if (NF > 1) print $2; else print $0 }')
 
       - name: Install Clang
         run: |
@@ -94,5 +98,5 @@ jobs:
       - name: Kernel REL
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.config_name }} KernelSU
+          name: ${{ steps.processed_name }} KernelSU
           path: ./Kernel.zip
