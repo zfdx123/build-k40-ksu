@@ -86,6 +86,8 @@ jobs:
           echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
           echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
           echo "CONFIG_KPROBE_EVENTS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+          git config --global user.email "robot@example.com"
+          git config --global user.name "robot"
           git add ${{ inputs.config_path }}${{ inputs.config_name }}
           git commit -m "KUS"
           ./KernelSU/kernel/setup.sh main
