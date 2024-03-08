@@ -105,7 +105,6 @@ jobs:
           chmod +x ./magiskboot
           unzip boot.zip
           cp -rf kernel-source/out/arch/arm64/boot/Image ./Image
-          cp -rf kernel-source/out/arch/arm64/boot/dtbo.img ./dtbo.img
           ./magiskboot unpack boot.img
           rm -rf kernel
           mv Image kernel
