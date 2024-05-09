@@ -104,13 +104,12 @@ jobs:
         run: |
           chmod +x ./magiskboot
           unzip boot.zip
-          cp -rf kernel-source/out/arch/arm64/boot/Image ./Image
+          cp -rf kernel-source/out/arch/arm64/boot/* .
           ./magiskboot unpack boot.img
           rm -rf kernel
-          mv Image kernel
+          cp -rf kernel-source/out/arch/arm64/boot/Image ./kernel
           ./magiskboot repack boot.img
           rm -rf ramdisk.cpio boot.img
-          mv kernel Image
 
       - name: Zip
         run: |
