@@ -112,8 +112,8 @@ jobs:
           rm -rf ramdisk.cpio boot.img
 
       - name: Zip
-        run: |
-          zip -r -9 -q -o Kernel.zip new-boot.img Image
+        run:
+          zip -r -9 -o Kernel.zip *
 
       - name: Kernel REL
         uses: actions/upload-artifact@main
