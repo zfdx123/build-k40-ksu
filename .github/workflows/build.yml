@@ -113,7 +113,7 @@ jobs:
 
       - name: Zip
         run: |
-          zip -r -9 -q -o Kernel.zip new-boot.img Image
+          zip -r -9 -q -o Kernel.zip new-boot.img Image kona-v2.1.dtb kona-v2.dtb kona.dtb
 
       - name: Kernel REL
         uses: actions/upload-artifact@main
