@@ -113,7 +113,7 @@ jobs:
 
       - name: Zip
         run:
-          zip -r -9 -o Kernel.zip *
+          zip -r -9 -o Kernel.zip Image.gz-dtb Image.gz kernel new-boot.img
 
       - name: Kernel REL
         uses: actions/upload-artifact@main
