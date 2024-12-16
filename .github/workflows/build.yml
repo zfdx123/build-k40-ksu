@@ -31,7 +31,7 @@ on:
         description: '编译器下载地址'
         required: false
         type: string
-        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-19.0.0git-release/WeebX-Clang-19.0.0git.tar.gz'
+        default: 'https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-19.1.5-release/WeebX-Clang-19.1.5.tar.gz'
 
 jobs:
 
