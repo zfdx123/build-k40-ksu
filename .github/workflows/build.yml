@@ -78,19 +78,28 @@ jobs:
         run: |
           git clone --depth=1 -b ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
           
-      - name: Support KernelSU
-        if: github.event.inputs.ksu == 'true'
-        run: |
-          git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
-          cd kernel-source
-          echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_KPROBE_EVENTS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          git config --global user.email "robot@example.com"
-          git config --global user.name "robot"
-          git add ${{ inputs.config_path }}${{ inputs.config_name }}
-          git commit -m "KUS"
-          ./KernelSU/kernel/setup.sh v0.9.5
+          - name: Support KernelSU
+            if: github.event.inputs.ksu == 'true'
+            run: |
+              git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
+              cd kernel-source
+              echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_KPROBE_EVENTS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_NAMESPACES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_PID_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_IPC_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_NET_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_UTS_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_USER_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_CGROUPS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_SECCOMP=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              echo "CONFIG_OVERLAY_FS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+              git config --global user.email "robot@example.com"
+              git config --global user.name "robot"
+              git add ${{ inputs.config_path }}${{ inputs.config_name }}
+              git commit -m "Add KernelSU & Droidspaces config"
+              ./KernelSU/kernel/setup.sh v0.9.5
 
       - name: Make
         run: |
