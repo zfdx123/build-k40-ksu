@@ -78,27 +78,46 @@ jobs:
         run: |
           git clone --depth=1 -b ${{ inputs.kernel_tag }} ${{ inputs.git_url }} kernel-source
           
-      - name: Support KernelSU
+
+      - name: Support KernelSU & Container Namespaces
         if: github.event.inputs.ksu == 'true'
         run: |
           git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
           cd kernel-source
-          echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_KPROBE_EVENTS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_NAMESPACES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_PID_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_IPC_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_NET_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_UTS_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_USER_NS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_CGROUPS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_SECCOMP=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
-          echo "CONFIG_OVERLAY_FS=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
+          
+          # 定义配置文件路径（根据你的输入参数动态获取）
+          CONFIG_FILE="${{ inputs.config_path }}${{ inputs.config_name }}"
+          
+          # 1. 处理 KernelSU 依赖 (Kprobes)
+          sed -i '/CONFIG_KPROBES/d' $CONFIG_FILE
+          sed -i '/CONFIG_HAVE_KPROBES/d' $CONFIG_FILE
+          sed -i '/CONFIG_KPROBE_EVENTS/d' $CONFIG_FILE
+          echo "CONFIG_KPROBES=y" >> $CONFIG_FILE
+          echo "CONFIG_HAVE_KPROBES=y" >> $CONFIG_FILE
+          echo "CONFIG_KPROBE_EVENTS=y" >> $CONFIG_FILE
+          
+          # 2. 开启容器命名空间 (修复 droidspaces 报错)
+          # 先删除可能存在的禁用行或旧配置
+          sed -i '/CONFIG_NAMESPACES/d' $CONFIG_FILE
+          sed -i '/CONFIG_UTS_NS/d' $CONFIG_FILE
+          sed -i '/CONFIG_IPC_NS/d' $CONFIG_FILE
+          sed -i '/CONFIG_PID_NS/d' $CONFIG_FILE
+          sed -i '/CONFIG_NET_NS/d' $CONFIG_FILE
+          sed -i '/CONFIG_USER_NS/d' $CONFIG_FILE
+          
+          # 强制写入开启指令
+          echo "CONFIG_NAMESPACES=y" >> $CONFIG_FILE
+          echo "CONFIG_UTS_NS=y" >> $CONFIG_FILE
+          echo "CONFIG_IPC_NS=y" >> $CONFIG_FILE
+          echo "CONFIG_PID_NS=y" >> $CONFIG_FILE
+          echo "CONFIG_NET_NS=y" >> $CONFIG_FILE
+          echo "CONFIG_USER_NS=y" >> $CONFIG_FILE
+
+          # 3. 提交修改并运行 KernelSU 安装脚本
           git config --global user.email "robot@example.com"
           git config --global user.name "robot"
-          git add ${{ inputs.config_path }}${{ inputs.config_name }}
-          git commit -m "Add KernelSU & Droidspaces config"
+          git add $CONFIG_FILE
+          git commit -m "Enable KernelSU and Container Features for Droidspaces"
           ./KernelSU/kernel/setup.sh v0.9.5
     
       - name: Make
