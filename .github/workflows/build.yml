@@ -81,7 +81,7 @@ jobs:
       - name: Support KernelSU
         if: github.event.inputs.ksu == 'true'
         run: |
-          git clone https://github.com/tiann/KernelSU kernel-source/KernelSU
+          git clone https://github.com/ReSukiSU/ReSukiSU kernel-source/KernelSU
           cd kernel-source
           echo "CONFIG_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
           echo "CONFIG_HAVE_KPROBES=y" >> ${{ inputs.config_path }}${{ inputs.config_name }}
@@ -90,7 +90,7 @@ jobs:
           git config --global user.name "robot"
           git add ${{ inputs.config_path }}${{ inputs.config_name }}
           git commit -m "KUS"
-          ./KernelSU/kernel/setup.sh v0.9.5
+          ./KernelSU/kernel/setup.sh
 
       - name: Make
         run: |
