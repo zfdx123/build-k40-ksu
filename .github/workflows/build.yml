@@ -90,7 +90,7 @@ jobs:
           git config --global user.name "robot"
           git add ${{ inputs.config_path }}${{ inputs.config_name }}
           git commit -m "KUS"
-          ./KernelSU/kernel/setup.sh
+          sh ./KernelSU/kernel/setup.sh
 
       - name: Make
         run: |
